@@ -154,7 +154,7 @@ class GateWallet {
  * @param {*} signer 
  * @returns {object} {gateWallet,  gateEthereumAddress}
  */
-async function createWalletFromEtherAccount(signer, config) {
+async function createWalletFromGateChainAccount(signer, config) {
     const metamask_message = (config && config.METAMASK_MESSAGE ) ? config.METAMASK_MESSAGE :  METAMASK_MESSAGE
     const gtAddress = await signer.getAddress()
     const gateAddress = `gate:${gtAddress}`;
@@ -167,5 +167,5 @@ async function createWalletFromEtherAccount(signer, config) {
 
 export default {
     GateWallet,
-    createWalletFromEtherAccount
+    createWalletFromGateChainAccount
 }
