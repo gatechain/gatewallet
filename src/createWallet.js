@@ -128,21 +128,20 @@ class GateWallet {
         return isTrur
     }
 
-    signTransaction_(transaction, signature) {
+    packSignature(transaction, signature) {
         const packedSignature = circomlib.eddsa.packSignature(signature)
         transaction.signature = packedSignature.toString('hex')
         return transaction
     }
 
-    signTransaction (transaction, encodedTransaction) {
-        const signature = this.getSignature(transaction, encodedTransaction)
-        const hashMessage = this.getHashMessage(encodedTransaction);
+    signTransaction (transaction, type) {
+        const { signature, hashMessage } = this.getSignature(transaction, type)
         const isTrur = this.verifySignature(hashMessage, signature)
 
         if (!isTrur) {
             throw new Error('Error: verifySignature is false.')
         }
-        return this.signTransaction_(transaction, signature)
+        return this.packSignature(transaction, signature)
     }
 
     async signCreateAccountAuthorization(provider, signer) {
