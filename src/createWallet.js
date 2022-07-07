@@ -58,11 +58,17 @@ class GateWallet {
                 EIP_712_PROVIDER,
                 EIP_712_VERSION,
                 CONTRACT_ADDRESSES,
-                CREATE_ACCOUNT_AUTH_MESSAGE
+                CREATE_ACCOUNT_AUTH_MESSAGE,
+                contractLeftMap: {
+                    BTC: 0,
+                    ETH: 1
+                },
+                contractRightMap: {
+                    USDC: 0,
+                    USDT: 1
+                }
             }
         }
-
-        console.log(privateKey, gateEthereumAddress, config)
 
         // if (!isHermezEthereumAddress(gateEthereumAddress)) {
         //     throw new Error('Invalid Hermez Ethereum address')
@@ -79,17 +85,33 @@ class GateWallet {
         this.gateEthereumAddress = gateEthereumAddress
 
     }
+    /**
+     * Builds the message to hash. Used when signing transactions
+     * @param {Object} encodedTransaction - Transaction object return from `encodeTransaction`
+     * @returns {Scalar} Message to sign
+     */
+    buildTransactionHashMessage(tx, type) {
+        const txCompressedData = type === 'order'? buildOrderCompressedData(tx, this.config): buildCancelOrderCompressedData(tx)
 
-    getHashMessage (val) {
-        return Fr.e(val)
+        const h = circomlib.poseidon([
+            txCompressedData
+        ])
+
+        return h
     }
 
-    getSignature(transaction, encodedTransaction) {
-        //   const hashMessage = buildTransactionHashMessage(encodedTransaction)
+    getHashMessage (tx, type) {
+        return this.buildTransactionHashMessage(tx, type)
+    }
+
+    getSignature(transaction, type) {
         try {
-            const hashMessage = this.getHashMessage(encodedTransaction);
+            const hashMessage = this.getHashMessage(transaction, type);
             const signature = circomlib.eddsa.signPoseidon(this.privateKey, hashMessage)
-            return signature;
+            return {
+                signature,
+                hashMessage
+            };
         } catch (error) {
             throw new Error('Signature Error.')  
         }
@@ -164,6 +186,57 @@ async function createWalletFromGateChainAccount(signer, config) {
     const gateWallet = new GateWallet(bufferSignature, gateAddress, config)
     return { gateWallet, gateAddress}
 }
+
+/**
+ * Encode tx compressed data
+ * @param {Object} tx - Transaction object returned by `encodeTransaction`
+ * @returns {Scalar} Encoded tx compressed data
+ * @private
+ */
+function buildOrderCompressedData(tx, config) {
+    const {contractLeftMap, contractRightMap} = config
+    let res = Scalar.e(0)
+    let contract_left = tx.contract.split('_')[0]
+    let contract_right = tx.contract.split('_')[1]
+
+    if (!contractLeftMap[contract_left].toString()) {
+        throw Error(`${contract_left} does not exist in ${JSON.stringify(contractLeftMap)}`)
+    }
+    if (!contractRightMap[contract_right].toString()) {
+        throw Error(`${contract_right} does not exist in ${JSON.stringify(contractRightMap)}`)
+    }
+
+    res = Scalar.add(res, tx.user_id || 0)
+    let is_liq = tx.is_lig ? 1 : 0
+    res = Scalar.add(res, Scalar.shl(is_liq || 0, 48))
+    
+    let left = contractLeftMap[contract_left] || 0
+    res = Scalar.add(res, Scalar.shl(left || 0, 49))
+
+    let right = contractRightMap[contract_right] || 0
+    res = Scalar.add(res, Scalar.shl(right || 0, 57))
+
+    let size_ = tx.size >= 0 ? 0 : 1;
+    res = Scalar.add(res, Scalar.shl(size_ || 0, 61))
+    res = Scalar.add(res, Scalar.shl(tx.size || 0, 62))
+
+    let price_left = tx.price.split('.')[0];
+    res = Scalar.add(res, Scalar.shl(price_left || 0, 125))
+    
+    let price_right = tx.price.split('.')[1];
+    let right_ = parseFloat(`0.${price_right}`) * 10^18;
+    res = Scalar.add(res, Scalar.shl(right_ || 0, 189));
+    return res
+}
+
+function buildCancelOrderCompressedData(tx) {
+    let res = Scalar.e(0)
+
+    res = Scalar.add(res, Scalar.shl(tx.user_id || 0))
+    res = Scalar.add(res, Scalar.shl(tx.order_id || 0, 48))
+    return res
+}
+
 
 export default {
     GateWallet,
