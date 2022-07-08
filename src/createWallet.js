@@ -91,11 +91,11 @@ class GateWallet {
      * @returns {Scalar} Message to sign
      */
     buildTransactionHashMessage(tx, type) {
-       return buildTransactionHashMessage(tx, type)
+       return buildTransactionHashMessage(tx, type, this.config)
     }
 
     getHashMessage (tx, type) {
-        return this.buildTransactionHashMessage(tx, type, this.config)
+        return this.buildTransactionHashMessage(tx, type)
     }
 
     getSignature(transaction, type) {
@@ -219,7 +219,7 @@ function buildOrderCompressedData(tx, config) {
 function buildCancelOrderCompressedData(tx) {
     let res = Scalar.e(0)
 
-    res = Scalar.add(res, Scalar.shl(tx.user_id || 0))
+    res = Scalar.add(res, tx.user_id || 0)
     res = Scalar.add(res, Scalar.shl(tx.order_id || 0, 48))
     return res
 }
