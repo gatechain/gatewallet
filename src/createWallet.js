@@ -91,17 +91,11 @@ class GateWallet {
      * @returns {Scalar} Message to sign
      */
     buildTransactionHashMessage(tx, type) {
-        const txCompressedData = type === 'order'? buildOrderCompressedData(tx, this.config): buildCancelOrderCompressedData(tx)
-
-        const h = circomlib.poseidon([
-            txCompressedData
-        ])
-
-        return h
+       return buildTransactionHashMessage(tx, type)
     }
 
     getHashMessage (tx, type) {
-        return this.buildTransactionHashMessage(tx, type)
+        return this.buildTransactionHashMessage(tx, type, this.config)
     }
 
     getSignature(transaction, type) {
@@ -169,22 +163,21 @@ class GateWallet {
     }
 }
 
-
 /**
- * Create GateWallet instance.
- * @param {*} signer 
- * @returns {object} {gateWallet,  gateEthereumAddress}
+ * Builds the message to hash. Used when signing transactions
+ * @param {Object} encodedTransaction - Transaction object return from `encodeTransaction`
+ * @returns {Scalar} Message to sign
  */
-async function createWalletFromGateChainAccount(signer, config) {
-    const metamask_message = (config && config.METAMASK_MESSAGE ) ? config.METAMASK_MESSAGE :  METAMASK_MESSAGE
-    const gtAddress = await signer.getAddress()
-    const gateAddress = `gate:${gtAddress}`;
-    const signature = await signer.signMessage(metamask_message)
-    const hashedSignature = jsSha3.keccak256(signature)
-    const bufferSignature = hexToBuffer(hashedSignature)
-    const gateWallet = new GateWallet(bufferSignature, gateAddress, config)
-    return { gateWallet, gateAddress}
+function buildTransactionHashMessage(tx, type, config) {
+    const txCompressedData = type === 'order'? buildOrderCompressedData(tx, config): buildCancelOrderCompressedData(tx)
+
+    const h = circomlib.poseidon([
+        txCompressedData
+    ])
+
+    return h
 }
+
 
 /**
  * Encode tx compressed data
@@ -206,25 +199,20 @@ function buildOrderCompressedData(tx, config) {
     }
 
     res = Scalar.add(res, tx.user_id || 0)
-    let is_liq = tx.is_lig ? 1 : 0
-    res = Scalar.add(res, Scalar.shl(is_liq || 0, 48))
-    
-    let left = contractLeftMap[contract_left] || 0
-    res = Scalar.add(res, Scalar.shl(left || 0, 49))
 
-    let right = contractRightMap[contract_right] || 0
-    res = Scalar.add(res, Scalar.shl(right || 0, 57))
+    let left = contract_left === 'BTC' ? 0 : 1
+    res = Scalar.add(res, Scalar.shl(left || 0, 48))
+
+    let right = contract_right === 'USDC' ? 0 : 1
+    res = Scalar.add(res, Scalar.shl(right || 0, 56))
 
     let size_ = tx.size >= 0 ? 0 : 1;
-    res = Scalar.add(res, Scalar.shl(size_ || 0, 61))
-    res = Scalar.add(res, Scalar.shl(tx.size || 0, 62))
+    res = Scalar.add(res, Scalar.shl(size_ || 0, 60))
 
-    let price_left = tx.price.split('.')[0];
-    res = Scalar.add(res, Scalar.shl(price_left || 0, 125))
-    
-    let price_right = tx.price.split('.')[1];
-    let right_ = parseFloat(`0.${price_right}`) * 10^18;
-    res = Scalar.add(res, Scalar.shl(right_ || 0, 189));
+    res = Scalar.add(res, Scalar.shl(tx.size || 0, 61))
+
+    let price= parseFloat(`0.${tx.price}`) * 10^18;
+    res = Scalar.add(res, Scalar.shl(price || 0, 124));
     return res
 }
 
@@ -236,8 +224,25 @@ function buildCancelOrderCompressedData(tx) {
     return res
 }
 
+/**
+ * Create GateWallet instance.
+ * @param {*} signer 
+ * @returns {object} {gateWallet,  gateEthereumAddress}
+ */
+ async function createWalletFromGateChainAccount(signer, config) {
+    const metamask_message = (config && config.METAMASK_MESSAGE ) ? config.METAMASK_MESSAGE :  METAMASK_MESSAGE
+    const gtAddress = await signer.getAddress()
+    const gateAddress = `gate:${gtAddress}`;
+    const signature = await signer.signMessage(metamask_message)
+    const hashedSignature = jsSha3.keccak256(signature)
+    const bufferSignature = hexToBuffer(hashedSignature)
+    const gateWallet = new GateWallet(bufferSignature, gateAddress, config)
+    return { gateWallet, gateAddress}
+}
+
 
 export default {
     GateWallet,
-    createWalletFromGateChainAccount
+    createWalletFromGateChainAccount,
+    buildTransactionHashMessage
 }

@@ -1,6 +1,6 @@
 {
   "name": "gatewallet",
-  "version": "1.0.5",
+  "version": "1.0.8",
   "description": "",
   "main": "dist/gate-wallet.js",
   "scripts": {
