@@ -102,9 +102,20 @@ class GateWallet {
         try {
             const hashMessage = this.getHashMessage(transaction, type);
             const signature = circomlib.eddsa.signPoseidon(this.privateKey, hashMessage)
+            
+            const data = {
+                "signed_msg": hashMessage.toString(),
+                "pub_x": this.publicKey[0],
+                "pub_y": this.publicKey[1],
+                "signature_r_8_x": signature.R8[0].toString(),
+                "signature_r_8_y": signature.R8[1].toString(),
+                "signature_s": signature.S.toString()
+            }
+
             return {
                 signature,
-                hashMessage
+                hashMessage,
+                data
             };
         } catch (error) {
             throw new Error('Signature Error.')  
@@ -169,7 +180,22 @@ class GateWallet {
  * @returns {Scalar} Message to sign
  */
 function buildTransactionHashMessage(tx, type, config) {
-    const txCompressedData = type === 'order'? buildOrderCompressedData(tx, config): buildCancelOrderCompressedData(tx)
+    let txCompressedData 
+
+    switch (type) {
+        case 'order':
+            txCompressedData = buildOrderCompressedData(tx, config)
+            break;
+
+        case 'cancelOrder':
+            txCompressedData = buildCancelOrderCompressedData(tx)
+            break;
+        case 'withdraw':
+            txCompressedData = buildWithdrawCompressedData(tx)
+            break;
+        default:
+            throw new Error('type can be order cancelOrder withdraw')
+    }
 
     const h = circomlib.poseidon([
         txCompressedData
@@ -221,6 +247,14 @@ function buildCancelOrderCompressedData(tx) {
 
     res = Scalar.add(res, tx.user_id || 0)
     res = Scalar.add(res, Scalar.shl(tx.order_id || 0, 48))
+    return res
+}
+
+function buildWithdrawCompressedData(tx) {
+    let res = Scalar.e(0)
+
+    res = Scalar.add(res, tx.user_id || 0)
+    res = Scalar.add(res, Scalar.shl(tx.amount * 10^18 || 0, 48))
     return res
 }
 
