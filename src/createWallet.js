@@ -1,14 +1,16 @@
 const circomlib = require('circomlib')
-const { utils, Scalar, bn128 } = require('ffjavascript');
+const { utils, Scalar } = require('ffjavascript');
 const { ethers } = require('ethers')
 const base64url = require('base64url')
 const jsSha3 = require('js-sha3')
 
-const Fr = bn128.Fr;
 const { METAMASK_MESSAGE, CREATE_ACCOUNT_AUTH_MESSAGE, EIP_712_VERSION, EIP_712_PROVIDER, CONTRACT_ADDRESSES, ContractNames } = require('./const.js');
 
 export function hexToBuffer(hexString) {
     return Buffer.from(hexString.match(/.{1,2}/g).map((byte) => parseInt(byte, 16)))
+}
+export function bufToHex(buf) {
+    return Array.prototype.map.call(new Uint8Array(buf), x => ('00' + x.toString(16)).slice(-2)).join('')
 }
 
 export function padZeros(string, length) {
@@ -50,31 +52,32 @@ class GateWallet {
         if (privateKey.length !== 32) {
             throw new Error('Private key buffer must be 32 bytes')
         }
-        if (config) {
-            this.config = config 
-        } else {
-            this.config = {
-                METAMASK_MESSAGE,
-                EIP_712_PROVIDER,
-                EIP_712_VERSION,
-                CONTRACT_ADDRESSES,
-                CREATE_ACCOUNT_AUTH_MESSAGE,
-                contractLeftMap: {
-                    BTC: 0,
-                    ETH: 1
-                },
-                contractRightMap: {
-                    USDC: 0,
-                    USDT: 1
-                }
+        this.config = {
+            METAMASK_MESSAGE,
+            EIP_712_PROVIDER,
+            EIP_712_VERSION,
+            CONTRACT_ADDRESSES,
+            CREATE_ACCOUNT_AUTH_MESSAGE,
+            contractLeftMap: {
+                BTC: 0,
+                ETH: 1
+            },
+            contractRightMap: {
+                USDC: 0,
+                USDT: 1
             }
         }
 
-        // if (!isHermezEthereumAddress(gateEthereumAddress)) {
-        //     throw new Error('Invalid Hermez Ethereum address')
-        // }
+        if (config) {
+            this.config = {
+                ...this.config,
+                ...config
+            } 
+            console.log('config', config, 'this.config', this.config)
+        }
         const publicKey = circomlib.eddsa.prv2pub(privateKey)
         this.privateKey = privateKey
+        this.privateKeyHex = bufToHex(privateKey)
         this.publicKey = [publicKey[0].toString(), publicKey[1].toString()]
         this.publicKeyHex = [publicKey[0].toString(16), publicKey[1].toString(16)]
 
@@ -102,21 +105,8 @@ class GateWallet {
         try {
             const hashMessage = this.getHashMessage(transaction, type);
             const signature = circomlib.eddsa.signPoseidon(this.privateKey, hashMessage)
-            
-            const data = {
-                "signed_msg": hashMessage.toString(),
-                "pub_x": this.publicKey[0],
-                "pub_y": this.publicKey[1],
-                "signature_r_8_x": signature.R8[0].toString(),
-                "signature_r_8_y": signature.R8[1].toString(),
-                "signature_s": signature.S.toString()
-            }
-
-            return {
-                signature,
-                hashMessage,
-                data
-            };
+            const packedSignature = circomlib.eddsa.packSignature(signature)
+            return '0x' + packedSignature.toString('hex')
         } catch (error) {
             throw new Error('Signature Error.')  
         }
@@ -133,21 +123,6 @@ class GateWallet {
         return isTrur
     }
 
-    packSignature(transaction, signature) {
-        const packedSignature = circomlib.eddsa.packSignature(signature)
-        transaction.signature = packedSignature.toString('hex')
-        return transaction
-    }
-
-    signTransaction (transaction, type) {
-        const { signature, hashMessage } = this.getSignature(transaction, type)
-        const isTrur = this.verifySignature(hashMessage, signature)
-
-        if (!isTrur) {
-            throw new Error('Error: verifySignature is false.')
-        }
-        return this.packSignature(transaction, signature)
-    }
 
     async signCreateAccountAuthorization(provider, signer) {
         const chainId = (await provider.getNetwork()).chainId
@@ -170,7 +145,12 @@ class GateWallet {
             Authorisation: this.config.CREATE_ACCOUNT_AUTH_MESSAGE,
             BJJKey: bJJ
         }
-        return signer._signTypedData(domain, types, value)
+        const signature = await signer._signTypedData(domain, types, value)
+        
+        return {
+            signature,
+            ...value
+        }
     }
 }
 
@@ -263,13 +243,20 @@ function buildWithdrawCompressedData(tx) {
  * @param {*} signer 
  * @returns {object} {gateWallet,  gateEthereumAddress}
  */
- async function createWalletFromGateChainAccount(signer, config) {
-    const metamask_message = (config && config.METAMASK_MESSAGE ) ? config.METAMASK_MESSAGE :  METAMASK_MESSAGE
+ async function createWalletFromGateChainAccount(signer, config, privateKeyHex) {
     const gtAddress = await signer.getAddress()
     const gateAddress = `gate:${gtAddress}`;
-    const signature = await signer.signMessage(metamask_message)
-    const hashedSignature = jsSha3.keccak256(signature)
-    const bufferSignature = hexToBuffer(hashedSignature)
+
+    let bufferSignature
+    if (privateKeyHex) {
+        bufferSignature = hexToBuffer(privateKeyHex)
+    } else {
+        const metamask_message = (config && config.METAMASK_MESSAGE ) ? config.METAMASK_MESSAGE :  METAMASK_MESSAGE
+        const signature = await signer.signMessage(metamask_message)
+        const hashedSignature = jsSha3.keccak256(signature)
+        bufferSignature = hexToBuffer(hashedSignature)
+    }
+   
     const gateWallet = new GateWallet(bufferSignature, gateAddress, config)
     return { gateWallet, gateAddress}
 }
