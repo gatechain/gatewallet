@@ -217,7 +217,7 @@ function buildOrderCompressedData(tx, config) {
 
     res = Scalar.add(res, Scalar.shl(tx.size || 0, 61))
 
-    let price= parseFloat(`0.${tx.price}`) * 10^18;
+    let price= parseFloat(tx.price) * 10^18;
     res = Scalar.add(res, Scalar.shl(price || 0, 124));
     return res
 }
