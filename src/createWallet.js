@@ -206,10 +206,10 @@ function buildOrderCompressedData(tx, config) {
 
     res = Scalar.add(res, tx.user_id || 0)
 
-    let left = contract_left === 'BTC' ? 0 : 1
+    let left = contractLeftMap[contract_left]
     res = Scalar.add(res, Scalar.shl(left || 0, 48))
 
-    let right = contract_right === 'USDC' ? 0 : 1
+    let right = contractRightMap[contract_right]
     res = Scalar.add(res, Scalar.shl(right || 0, 56))
 
     let size_ = tx.size >= 0 ? 0 : 1;
