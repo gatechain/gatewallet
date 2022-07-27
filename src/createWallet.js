@@ -16,30 +16,30 @@ export function bufToHex(buf) {
 export function padZeros(string, length) {
     if (length > string.length) { string = '0'.repeat(length - string.length) + string }
     return string
-  }
+}
 
-  function hexToBase64BJJ(bjjCompressedHex) {
+function hexToBase64BJJ(bjjCompressedHex) {
     // swap endian
     const bjjScalar = Scalar.fromString(bjjCompressedHex, 16)
     const bjjBuff = utils.leInt2Buff(bjjScalar, 32)
     const bjjSwap = padZeros(utils.beBuff2int(bjjBuff).toString(16), 64)
-  
+
     const bjjSwapBuffer = Buffer.from(bjjSwap, 'hex')
-  
+
     let sum = 0
-  
+
     for (let i = 0; i < bjjSwapBuffer.length; i++) {
-      sum += bjjSwapBuffer[i]
-      sum = sum % 2 ** 8
+        sum += bjjSwapBuffer[i]
+        sum = sum % 2 ** 8
     }
-  
+
     const sumBuff = Buffer.alloc(1)
     sumBuff.writeUInt8(sum)
-  
+
     const finalBuffBjj = Buffer.concat([bjjSwapBuffer, sumBuff])
-  
+
     return `gate:${base64url.encode(finalBuffBjj)}`
-  }
+}
 
 
 /**
@@ -72,7 +72,7 @@ class GateWallet {
             this.config = {
                 ...this.config,
                 ...config
-            } 
+            }
             console.log('config', config, 'this.config', this.config)
         }
         const publicKey = circomlib.eddsa.prv2pub(privateKey)
@@ -94,10 +94,10 @@ class GateWallet {
      * @returns {Scalar} Message to sign
      */
     buildTransactionHashMessage(tx, type) {
-       return buildTransactionHashMessage(tx, type, this.config)
+        return buildTransactionHashMessage(tx, type, this.config)
     }
 
-    getHashMessage (tx, type) {
+    getHashMessage(tx, type) {
         return this.buildTransactionHashMessage(tx, type)
     }
 
@@ -108,7 +108,7 @@ class GateWallet {
             const packedSignature = circomlib.eddsa.packSignature(signature)
             return '0x' + packedSignature.toString('hex')
         } catch (error) {
-            throw new Error('Signature Error.')  
+            throw new Error('Signature Error.')
         }
     }
 
@@ -117,7 +117,7 @@ class GateWallet {
      * @param {String} signature 
      * @returns {boolean}
      */
-    verifySignature (hashMessage, signature) {
+    verifySignature(hashMessage, signature) {
         // 验证签名
         const isTrur = circomlib.eddsa.verifyPoseidon(hashMessage, signature, circomlib.eddsa.prv2pub(this.privateKey))
         return isTrur
@@ -128,7 +128,7 @@ class GateWallet {
         const chainId = (await provider.getNetwork()).chainId
         const bJJ = this.publicKeyCompressedHex.startsWith('0x') ? this.publicKeyCompressedHex : `0x${this.publicKeyCompressedHex}`
         const domain = {
-            name:  this.config.EIP_712_PROVIDER,
+            name: this.config.EIP_712_PROVIDER,
             version: this.config.EIP_712_VERSION,
             chainId,
             verifyingContract: this.config.CONTRACT_ADDRESSES[ContractNames.GateChain]
@@ -146,7 +146,7 @@ class GateWallet {
             BJJKey: bJJ
         }
         const signature = await signer._signTypedData(domain, types, value)
-        
+
         return {
             signature,
             ...value
@@ -160,7 +160,7 @@ class GateWallet {
  * @returns {Scalar} Message to sign
  */
 function buildTransactionHashMessage(tx, type, config) {
-    let txCompressedData 
+    let txCompressedData
 
     switch (type) {
         case 'order':
@@ -192,7 +192,7 @@ function buildTransactionHashMessage(tx, type, config) {
  * @private
  */
 function buildOrderCompressedData(tx, config) {
-    const {contractLeftMap, contractRightMap} = config
+    const { contractLeftMap, contractRightMap } = config
     let res = Scalar.e(0)
     let contract_left = tx.contract.split('_')[0]
     let contract_right = tx.contract.split('_')[1]
@@ -212,13 +212,13 @@ function buildOrderCompressedData(tx, config) {
     let right = contractRightMap[contract_right]
     res = Scalar.add(res, Scalar.shl(right || 0, 56))
 
+    let price = parseFloat(tx.price) * Math.pow(10, 18);
+    res = Scalar.add(res, Scalar.shl(price || 0, 64));
+
+    res = Scalar.add(res, Scalar.shl(tx.size || 0, 192))
+
     let size_ = tx.size >= 0 ? 0 : 1;
-    res = Scalar.add(res, Scalar.shl(size_ || 0, 60))
-
-    res = Scalar.add(res, Scalar.shl(tx.size || 0, 61))
-
-    let price= parseFloat(tx.price) * 10^18;
-    res = Scalar.add(res, Scalar.shl(price || 0, 124));
+    res = Scalar.add(res, Scalar.shl(size_ || 0, 255))
     return res
 }
 
@@ -234,7 +234,7 @@ function buildWithdrawCompressedData(tx) {
     let res = Scalar.e(0)
 
     res = Scalar.add(res, tx.user_id || 0)
-    res = Scalar.add(res, Scalar.shl(tx.amount * 10^18 || 0, 48))
+    res = Scalar.add(res, Scalar.shl(tx.amount * Math.pow(10, 18) || 0, 48))
     return res
 }
 
@@ -243,7 +243,7 @@ function buildWithdrawCompressedData(tx) {
  * @param {*} signer 
  * @returns {object} {gateWallet,  gateEthereumAddress}
  */
- async function createWalletFromGateChainAccount(signer, config, privateKeyHex) {
+async function createWalletFromGateChainAccount(signer, config, privateKeyHex) {
     const gtAddress = await signer.getAddress()
     const gateAddress = `gate:${gtAddress}`;
 
@@ -251,14 +251,14 @@ function buildWithdrawCompressedData(tx) {
     if (privateKeyHex) {
         bufferSignature = hexToBuffer(privateKeyHex)
     } else {
-        const metamask_message = (config && config.METAMASK_MESSAGE ) ? config.METAMASK_MESSAGE :  METAMASK_MESSAGE
+        const metamask_message = (config && config.METAMASK_MESSAGE) ? config.METAMASK_MESSAGE : METAMASK_MESSAGE
         const signature = await signer.signMessage(metamask_message)
         const hashedSignature = jsSha3.keccak256(signature)
         bufferSignature = hexToBuffer(hashedSignature)
     }
-   
+
     const gateWallet = new GateWallet(bufferSignature, gateAddress, config)
-    return { gateWallet, gateAddress}
+    return { gateWallet, gateAddress }
 }
 
 
