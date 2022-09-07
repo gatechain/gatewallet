@@ -2844,12 +2844,14 @@ ffjavascript@0.2.22:
     wasmcurves "0.0.12"
     worker-threads "^1.0.0"
 
-ffjavascript@^0.1.0:
-  version "0.1.3"
-  resolved "https://registry.npmmirror.com/ffjavascript/-/ffjavascript-0.1.3.tgz#75d5397f5da0af977d6f38b60301d4de25f17040"
-  integrity sha512-eAeIowhX8JB7scNMw3OgY2ecIlhmx7qPS/AJ7wW8ue6mv6/Wqm3o67CSdT6yuzeJaGoqo9FhoTFj8QiSz5MfGg==
+ffjavascript@^0.2.35:
+  version "0.2.56"
+  resolved "https://registry.yarnpkg.com/ffjavascript/-/ffjavascript-0.2.56.tgz#3509f98fcbd3e44ea93cd23519071b76d6eae433"
+  integrity sha512-em6G5Lrj7ucIqj4TYEgyoHs/j99Urwwqa4+YxEVY2hggnpRimVj+noX5pZQTxI1pvtiekZI4rG65JBf0xraXrg==
   dependencies:
-    big-integer "^1.6.48"
+    wasmbuilder "0.0.16"
+    wasmcurves "0.2.0"
+    web-worker "^1.2.0"
 
 ffwasm@0.0.7:
   version "0.0.7"
@@ -5115,6 +5117,11 @@ wasmbuilder@0.0.10:
   dependencies:
     big-integer "^1.6.48"
 
+wasmbuilder@0.0.16:
+  version "0.0.16"
+  resolved "https://registry.yarnpkg.com/wasmbuilder/-/wasmbuilder-0.0.16.tgz#f34c1f2c047d2f6e1065cbfec5603988f16d8549"
+  integrity sha512-Qx3lEFqaVvp1cEYW7Bfi+ebRJrOiwz2Ieu7ZG2l7YyeSJIok/reEQCQCuicj/Y32ITIJuGIM9xZQppGx5LrQdA==
+
 wasmcurves@0.0.12:
   version "0.0.12"
   resolved "https://registry.npmmirror.com/wasmcurves/-/wasmcurves-0.0.12.tgz"
@@ -5130,6 +5137,13 @@ wasmcurves@0.0.5:
   dependencies:
     big-integer "^1.6.42"
     blakejs "^1.1.0"
+
+wasmcurves@0.2.0:
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/wasmcurves/-/wasmcurves-0.2.0.tgz#ccfc5a7d3778b6e0768b82a9336c80054f9bc0cf"
+  integrity sha512-3e2rbxdujOwaod657gxgmdhZNn+i1qKdHO3Y/bK+8E7bV8ttV/fu5FO4/WLBACF375cK0QDLOP+65Na63qYuWA==
+  dependencies:
+    wasmbuilder "0.0.16"
 
 watchpack-chokidar2@^2.0.1:
   version "2.0.1"
@@ -5148,6 +5162,11 @@ watchpack@^1.7.4:
   optionalDependencies:
     chokidar "^3.4.1"
     watchpack-chokidar2 "^2.0.1"
+
+web-worker@^1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/web-worker/-/web-worker-1.2.0.tgz#5d85a04a7fbc1e7db58f66595d7a3ac7c9c180da"
+  integrity sha512-PgF341avzqyx60neE9DD+XS26MMNMoUQRz9NOZwW32nPQrF6p77f1htcnjBSEV8BGMKZ16choqUG4hyI0Hx7mA==
 
 web3-utils@^1.3.0:
   version "1.7.3"
