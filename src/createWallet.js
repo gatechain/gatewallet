@@ -6,15 +6,15 @@ const jsSha3 = require('js-sha3')
 
 const { METAMASK_MESSAGE, CREATE_ACCOUNT_AUTH_MESSAGE, EIP_712_VERSION, EIP_712_PROVIDER, CONTRACT_ADDRESSES, ContractNames } = require('./const.js');
 
-export function hexToBuffer(hexString) {
+function hexToBuffer(hexString) {
   return Buffer.from(hexString.match(/.{1,2}/g).map((byte) => parseInt(byte, 16)))
 }
 
-export function bufToHex(buf) {
+function bufToHex(buf) {
   return Array.prototype.map.call(new Uint8Array(buf), x => ('00' + x.toString(16)).slice(-2)).join('')
 }
 
-export function padZeros(string, length) {
+function padZeros(string, length) {
   if (length > string.length) { string = '0'.repeat(length - string.length) + string }
   return string
 }
@@ -263,7 +263,7 @@ async function createWalletFromGateChainAccount(signer, config, privateKeyHex) {
 }
 
 
-export default {
+module.exports = {
   GateWallet,
   createWalletFromGateChainAccount,
   buildTransactionHashMessage

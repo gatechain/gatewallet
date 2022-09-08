@@ -14,7 +14,7 @@ const CONTRACT_ADDRESSES = {
   [ContractNames.WithdrawalDelayer]: ''
 }
 
-export {
+module.exports = {
   METAMASK_MESSAGE,
   CREATE_ACCOUNT_AUTH_MESSAGE,
   EIP_712_VERSION,

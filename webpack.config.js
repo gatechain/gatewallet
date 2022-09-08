@@ -1,7 +1,7 @@
 const path = require('path')
 
 module.exports = {
-  entry: ['./src/index.js'],
+  entry: './src/createWallet.js',
   // devtool: 'source-map',
   mode: 'production',
   resolve: {
