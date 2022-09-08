@@ -266,5 +266,9 @@ async function createWalletFromGateChainAccount(signer, config, privateKeyHex) {
 module.exports = {
   GateWallet,
   createWalletFromGateChainAccount,
-  buildTransactionHashMessage
+  buildTransactionHashMessage,
+  hexToBuffer,
+  bufToHex,
+  padZeros,
+  hexToBase64BJJ
 }
