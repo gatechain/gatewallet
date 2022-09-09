@@ -14,4 +14,7 @@ module.exports = {
     library: 'gateWallet',
     libraryTarget: 'umd'
   },
+  optimization: {
+    runtimeChunk: true
+  }
 };
