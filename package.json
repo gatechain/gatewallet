@@ -1,8 +1,10 @@
 {
   "name": "gatewallet",
-  "version": "1.0.20",
+  "version": "1.0.21",
   "description": "",
-  "main": "dist/gate-wallet.js",
+  "main": "./dist/gate-wallet-node.js",
+  "module": "./dist/gate-wallet-node.js",
+  "browser": "./dist/gate-wallet.js",
   "scripts": {
     "build": "webpack -w"
   },
@@ -34,6 +36,8 @@
     "ts-loader": "^9.2.6",
     "typescript": "^4.5.5",
     "webpack": "4",
-    "webpack-cli": "^4.9.2"
+    "webpack-cli": "^4.9.2",
+    "worker-loader": "^3.0.8",
+    "worker-plugin": "^5.0.1"
   }
 }
