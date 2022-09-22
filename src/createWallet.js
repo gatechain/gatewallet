@@ -3,6 +3,7 @@ const { utils, Scalar } = require('ffjavascript');
 const { ethers } = require('ethers')
 const base64url = require('base64url')
 const jsSha3 = require('js-sha3')
+const Deciamls = require('decimal.js')
 
 const { METAMASK_MESSAGE, CREATE_ACCOUNT_AUTH_MESSAGE, EIP_712_VERSION, EIP_712_PROVIDER, CONTRACT_ADDRESSES, ContractNames } = require('./const.js');
 
@@ -213,7 +214,7 @@ function buildOrderCompressedData(tx, config) {
   let right = contractRightMap[contract_right]
   res = Scalar.add(res, Scalar.shl(right || 0, 56))
 
-  let price = parseFloat(tx.price) * Math.pow(10, 18);
+  let price = ((new Deciamls(tx.price)).mul(Math.pow(10, 18))).toFixed();
   res = Scalar.add(res, Scalar.shl(price || 0, 64));
 
   res = Scalar.add(res, Scalar.shl(tx.size || 0, 192))

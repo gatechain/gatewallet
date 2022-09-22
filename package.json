@@ -1,6 +1,6 @@
 {
   "name": "gatewallet",
-  "version": "1.0.21",
+  "version": "1.0.22",
   "description": "",
   "main": "./dist/gate-wallet-node.js",
   "module": "./dist/gate-wallet-node.js",
@@ -19,6 +19,7 @@
     "assert": "^2.0.0",
     "base64url": "^3.0.1",
     "circomlib": "0.5.2",
+    "decimal.js": "10.2.1",
     "ethers": "^5.5.1",
     "ffjavascript": "^0.2.35",
     "js-sha3": "^0.8.0"
