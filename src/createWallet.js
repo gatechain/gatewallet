@@ -214,10 +214,10 @@ function buildOrderCompressedData(tx, config) {
   let right = contractRightMap[contract_right]
   res = Scalar.add(res, Scalar.shl(right || 0, 56))
 
-  let price = ((new Deciamls(tx.price)).mul(Math.pow(10, 18))).toFixed();
+  let price = ((new Deciamls(tx.price)).mul(Math.pow(10, 18))).toString();
   res = Scalar.add(res, Scalar.shl(price || 0, 64));
 
-  res = Scalar.add(res, Scalar.shl(tx.size || 0, 192))
+  res = Scalar.add(res, Scalar.shl(Math.abs(tx.size) || 0, 192))
 
   let size_ = tx.size >= 0 ? 0 : 1;
   res = Scalar.add(res, Scalar.shl(size_ || 0, 255))
@@ -236,7 +236,8 @@ function buildWithdrawCompressedData(tx) {
   let res = Scalar.e(0)
 
   res = Scalar.add(res, tx.user_id || 0)
-  res = Scalar.add(res, Scalar.shl(tx.amount * Math.pow(10, 18) || 0, 48))
+  const amount = ((new Deciamls(tx.amount)).mul(Math.pow(10, 18))).toString();
+  res = Scalar.add(res, Scalar.shl(amount || 0, 48))
   return res
 }
 
