@@ -18,7 +18,7 @@
     "@babel/polyfill": "^7.12.1",
     "assert": "^2.0.0",
     "base64url": "^3.0.1",
-    "circomlib": "0.5.2",
+    "circomlib": "https://github.com/gatechain/circomlib#rn/0.5.3",
     "decimal.js": "10.2.1",
     "ethers": "^5.5.1",
     "ffjavascript": "https://github.com/gatechain/ffjavascript#0.1.3",
