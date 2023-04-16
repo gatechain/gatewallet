@@ -1,4 +1,4 @@
 ```bash
 # package.json
-gatewallet: "https://github.com/gatechain/gatewallet#rn/1.0.24"
+gatewallet: "https://github.com/gatechain/gatewallet#rn_1.1.0"
 ```
