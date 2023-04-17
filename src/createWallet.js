@@ -80,7 +80,6 @@ class GateWallet {
         ...this.config,
         ...config,
       };
-      console.log("config----", config, "this.config", this.config);
     }
     const publicKey = circomlib.eddsa.prv2pub(privateKey);
     this.privateKey = privateKey;
@@ -140,15 +139,13 @@ class GateWallet {
     return isTrur;
   }
 
-  async signCreateAccountAuthorization(provider, signer) {
-    const chainId = (await provider.getNetwork()).chainId;
+  async signCreateAccountAuthorization(signer) {
     const bJJ = this.publicKeyCompressedHex.startsWith("0x")
       ? this.publicKeyCompressedHex
       : `0x${this.publicKeyCompressedHex}`;
     const domain = {
       name: this.config.EIP_712_PROVIDER,
       version: this.config.EIP_712_VERSION,
-      chainId,
       verifyingContract:
         this.config.CONTRACT_ADDRESSES[ContractNames.GateChain],
     };
