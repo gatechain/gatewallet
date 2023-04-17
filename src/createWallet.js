@@ -210,6 +210,10 @@ function buildTransactionHashMessage(tx, type, config) {
 function buildOrderCompressedData(tx, config) {
   const { contractNames } = config;
   const contractId = getContractId(contractNames, tx.contract);
+  if (!contractId) {
+    console.warn("The market does not exist");
+    throw new Error("The market does not exist");
+  }
   let res = Scalar.e(0);
 
   res = Scalar.add(res, tx.user_id || 0);
