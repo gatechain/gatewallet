@@ -1,18 +1,17 @@
-const path = require('path')
+const path = require("path");
 
 module.exports = {
-  entry: ['./src/createWallet.js'],
-  // devtool: 'source-map',
-  mode: 'production',
+  entry: ["./src/createWallet.js"],
+  mode: "production",
   resolve: {
-    extensions: ['.tsx', '.ts', '.js']
+    extensions: [".js"],
   },
-  target: 'web',
+  target: "web",
   output: {
-    filename: 'gate-wallet.js',
-    path: path.resolve(__dirname, 'dist'),
+    filename: "gate-wallet.js",
+    path: path.resolve(__dirname, "dist"),
     globalObject: "this",
-    library: 'gateWallet',
-    libraryTarget: 'umd'
-  }
+    library: "gateWallet",
+    libraryTarget: "umd",
+  },
 };

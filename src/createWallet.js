@@ -4,6 +4,7 @@ const { ethers } = require("ethers");
 const base64url = require("base64url");
 const jsSha3 = require("js-sha3");
 const Deciamls = require("decimal.js");
+const spot = require("./spot.js");
 
 const {
   METAMASK_MESSAGE,
@@ -189,8 +190,17 @@ function buildTransactionHashMessage(tx, type, config) {
     case "withdraw":
       txCompressedData = buildWithdrawCompressedData(tx);
       break;
+    case "spotOrder":
+      txCompressedData = spot.buildSpotOrder(tx);
+      break;
+    case "spotCancelOrder":
+      txCompressedData = spot.buildSpotCancelOrder(tx);
+      break;
+    case "spotWithdraw":
+      txCompressedData = spot.buildSpotWithdraw(tx);
+      break;
     default:
-      throw new Error("type can be order cancelOrder withdraw");
+      throw new Error("type can be order cancelOrder withdraw spotOrder");
   }
 
   const h = circomlib.poseidon([txCompressedData]);
