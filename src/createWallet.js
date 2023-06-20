@@ -82,6 +82,7 @@ class GateWallet {
         ...config,
       };
     }
+    console.log(privateKey, "privateKey");
     const publicKey = circomlib.eddsa.prv2pub(privateKey);
     this.privateKey = privateKey;
     this.privateKeyHex = bufToHex(privateKey);
@@ -113,7 +114,11 @@ class GateWallet {
 
   getSignature(transaction, type) {
     try {
+      console.log(transaction, "transaction");
+      console.log(type, "type");
+      console.log(this.privateKey, "this.privateKey");
       const hashMessage = this.getHashMessage(transaction, type);
+      console.log(hashMessage, "hashMessage");
       const signature = circomlib.eddsa.signPoseidon(
         this.privateKey,
         hashMessage
@@ -162,7 +167,11 @@ class GateWallet {
       Authorisation: this.config.CREATE_ACCOUNT_AUTH_MESSAGE,
       BJJKey: bJJ,
     };
+    console.log(domain, "domain");
+    console.log(types, "types");
+    console.log(value, "value");
     const signature = await signer._signTypedData(domain, types, value);
+    console.log(signature, "signature");
 
     return {
       signature,
@@ -271,8 +280,11 @@ async function createWalletFromGateChainAccount(signer, config, privateKeyHex) {
       config && config.METAMASK_MESSAGE
         ? config.METAMASK_MESSAGE
         : METAMASK_MESSAGE;
+    console.log(metamask_message, "metamask_message");
     const signature = await signer.signMessage(metamask_message);
+    console.log("signature", signature);
     const hashedSignature = jsSha3.keccak256(signature);
+    console.log("hashedSignature", hashedSignature);
     bufferSignature = hexToBuffer(hashedSignature);
   }
 
@@ -289,13 +301,48 @@ function getContractId(contractNames, _name) {
   }
 }
 
+// signature: string
+function createPrivateKey(signature) {
+  const hashedSignature = jsSha3.keccak256(signature);
+  return hashedSignature;
+}
+
+// @param privateKey
+function getBJJKey(privateKey) {
+  const publicKey = circomlib.eddsa.prv2pub(hexToBuffer(privateKey));
+  // const publicKeyString = [publicKey[0].toString(), publicKey[1].toString()];
+  // const publicKeyHex = [publicKey[0].toString(16), publicKey[1].toString(16)];
+
+  const compressedPublicKey = utils.leBuff2int(
+    circomlib.babyJub.packPoint(publicKey)
+  );
+  // const publicKeyCompressed = compressedPublicKey.toString();
+  const publicKeyCompressedHex = ethers.utils.hexZeroPad(
+    `0x${compressedPublicKey.toString(16)}`,
+    32
+  );
+  // const publicKeyBase64 = hexToBase64BJJ(publicKeyCompressedHex.slice(2));
+  return publicKeyCompressedHex;
+}
+
+function getTxSignature(transaction, type, privateKey, config) {
+  try {
+    const hashMessage = buildTransactionHashMessage(transaction, type, config);
+    const signature = circomlib.eddsa.signPoseidon(
+      hexToBuffer(privateKey),
+      hashMessage
+    );
+    const packedSignature = circomlib.eddsa.packSignature(signature);
+    return "0x" + packedSignature.toString("hex");
+  } catch (error) {
+    throw new Error("Signature Error.");
+  }
+}
+
 module.exports = {
-  GateWallet,
-  createWalletFromGateChainAccount,
   buildTransactionHashMessage,
-  hexToBuffer,
-  bufToHex,
-  padZeros,
-  hexToBase64BJJ,
-  getContractId,
+  createWalletFromGateChainAccount,
+  getTxSignature,
+  createPrivateKey,
+  getBJJKey,
 };
