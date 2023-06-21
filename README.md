@@ -1,3 +1,8 @@
 ```bash
-{ gatewallet: "https://github.com/gatechain/gatewallet#1.1.3" }
+{ gatewallet: "https://github.com/gatechain/gatewallet#2.0.0" }
 ```
+### platform
+
+* web
+* node
+* flutter
